@@ -10,13 +10,7 @@
 mvn -Pspring-boot -DskipTests package
 ```
 
-2. 运行生成的可执行 jar：
-
-```powershell
-java -jar target\zoosystem-1.0-SNAPSHOT.jar --spring.main.web-application-type=servlet
-```
-
-或直接使用 Maven 启动（会将 `src/spring/java` 加入编译源）：
+2. 使用 Maven 启动（会将 `src/spring/java` 加入编译源）：
 
 ```powershell
 mvn -Pspring-boot spring-boot:run
