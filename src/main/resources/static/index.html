@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>动物园管理系统</title>
+  <style>
+    :root { --primary:#4CAF50; --light:#E8F5E9; --border:#ddd; }
+    body { font-family:"Microsoft YaHei",sans-serif; margin:0; padding:20px; background:#f9fdf9; color:#333; line-height:1.5; }
+    .container { max-width:1200px; margin:0 auto; }
+    header { text-align:center; margin-bottom:30px; padding:20px; background:var(--primary); color:#fff; border-radius:8px; box-shadow:0 4px 8px rgba(0,0,0,0.1); }
+    h1 { margin:0; }
+    .tabs { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+    .tab-btn { padding:10px 20px; background:#fff; border:1px solid var(--border); border-radius:6px; cursor:pointer; font-weight:bold; transition:all .3s; }
+    .tab-btn:hover, .tab-btn.active { background:var(--primary); color:#fff; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+    table { width:100%; border-collapse:collapse; margin-bottom:20px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.05); }
+    th, td { padding:10px 12px; text-align:left; border-bottom:1px solid var(--border); }
+    th { background:var(--light); font-weight:bold; position:sticky; top:0; }
+    tr:hover { background:#f9f9f9; }
+    .form-section { background:#fff; padding:20px; border-radius:8px; margin-bottom:30px; box-shadow:0 2px 6px rgba(0,0,0,0.05); }
+    .form-title { margin-top:0; color:var(--primary); border-left:4px solid var(--primary); padding-left:10px; }
+    .form-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:15px; }
+    label { display:block; margin-bottom:5px; font-weight:bold; }
+    input, select { width:100%; padding:8px; border:1px solid var(--border); border-radius:4px; box-sizing:border-box; }
+    .btn { background:var(--primary); color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:14px; }
+    .btn:hover { background:#388E3C; }
+    .msg { padding:10px; margin:10px 0; border-radius:4px; display:none; }
+    .msg.success { background:#E8F5E9; color:#2E7D32; border:1px solid #A5D6A7; }
+    .msg.error { background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A; }
+    .row-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    footer { text-align:center; margin-top:40px; color:#777; font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🐘 动物园信息管理系统</h1>
+      <div id="authBar" style="margin-top:10px; display:flex; gap:10px; align-items:center; justify-content:center;">
+        <span id="authStatus">未登录</span>
+        <input id="loginUser" placeholder="用户名" style="max-width:160px;">
+        <input id="loginPwd" type="password" placeholder="密码" style="max-width:160px;">
+        <button class="btn" id="btnLogin">登录</button>
+        <button class="btn" id="btnLogout" style="display:none;">退出</button>
+        <div id="authMsg" class="msg" style="margin:0;"> </div>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="enclosure">展区信息</button>
+      <button class="tab-btn" data-tab="animal">动物信息</button>
+      <button class="tab-btn" data-tab="staff">员工信息</button>
+      <button class="tab-btn" data-tab="feed">饲料信息</button>
+      <button class="tab-btn" data-tab="feeding">投喂记录</button>
+    </div>
+
+    <div id="enclosure" class="tab-content active">
+      <div class="form-section">
+        <h3 class="form-title">🟢 新增展区</h3>
+        <div class="form-grid">
+          <div><label>展区编号</label><input id="enid" placeholder="如 E001"></div>
+          <div><label>名称</label><input id="ename" placeholder="如 猴山"></div>
+          <div><label>容量</label><input id="ecapacity" type="number" placeholder="如 20"></div>
+          <div><label>状态</label>
+            <select id="estatus">
+              <option value="可用">可用</option>
+              <option value="维护中">维护中</option>
+              <option value="关闭">关闭</option>
+            </select>
+          </div>
+          <div><label>说明</label><input id="edesc" placeholder="可选"></div>
+        </div>
+        <button class="btn" id="btnAddEnclosure">➕ 添加展区</button>
+        <div id="enclosureMsg" class="msg"></div>
+      </div>
+      <h3>📋 展区列表</h3>
+      <table id="enclosureTable"><thead><tr><th>展区编号</th><th>名称</th><th>容量</th><th>当前动物数</th><th>状态</th><th>说明</th><th>操作</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div id="animal" class="tab-content">
+      <div class="form-section">
+        <h3 class="form-title">🐒 新增动物</h3>
+        <div class="form-grid">
+          <div><label>动物编号</label><input id="anid" placeholder="如 A001"></div>
+          <div><label>名字</label><input id="aname" placeholder="如 乐乐"></div>
+          <div><label>种类</label><input id="aspecies" placeholder="如 金丝猴"></div>
+          <div><label>性别</label>
+            <select id="agender">
+              <option value="M">M 雄性</option>
+              <option value="F">F 雌性</option>
+            </select>
+          </div>
+          <div><label>出生日期</label><input id="abirth" type="date"></div>
+          <div><label>所在展区</label><select id="aenid"></select></div>
+        </div>
+        <button class="btn" id="btnAddAnimal">➕ 添加动物</button>
+        <div id="animalMsg" class="msg"></div>
+      </div>
+      <h3>📋 动物列表</h3>
+      <table id="animalTable"><thead><tr><th>动物编号</th><th>名字</th><th>种类</th><th>性别</th><th>出生日期</th><th>所在展区</th><th>操作</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div id="staff" class="tab-content">
+      <div class="form-section">
+        <h3 class="form-title">👷 新增员工</h3>
+        <div class="form-grid">
+          <div><label>员工编号</label><input id="sid" placeholder="如 EMP001"></div>
+          <div><label>姓名</label><input id="sname" placeholder="如 张伟"></div>
+          <div><label>职位</label>
+            <select id="srole">
+              <option value="饲养员">饲养员</option>
+              <option value="兽医">兽医</option>
+              <option value="管理员">管理员</option>
+              <option value="讲解员">讲解员</option>
+            </select>
+          </div>
+          <div><label>负责展区</label><select id="senid"></select></div>
+          <div><label>入职日期</label><input id="shire" type="date"></div>
+          <div><label>电话</label><input id="sphone" placeholder="可选"></div>
+          <div><label>邮箱</label><input id="semail" placeholder="可选"></div>
+        </div>
+        <button class="btn" id="btnAddStaff">➕ 添加员工</button>
+        <div id="staffMsg" class="msg"></div>
+      </div>
+      <h3>📋 员工列表</h3>
+      <table id="staffTable"><thead><tr><th>员工编号</th><th>姓名</th><th>职位</th><th>负责展区</th><th>操作</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div id="feed" class="tab-content">
+      <div class="form-section">
+        <h3 class="form-title">🥜 新增饲料</h3>
+        <div class="form-grid">
+          <div><label>饲料编号</label><input id="fid" placeholder="如 F001"></div>
+          <div><label>名称</label><input id="fname" placeholder="如 香蕉"></div>
+          <div><label>类别</label><input id="fcat" placeholder="如 水果"></div>
+          <div><label>库存数量</label><input id="fstock" type="number" step="0.1" placeholder="如 100"></div>
+          <div><label>单位</label>
+            <select id="funit">
+              <option value="kg">kg</option>
+              <option value="包">包</option>
+              <option value="根">根</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" id="btnAddFeed">➕ 添加饲料</button>
+        <div id="feedMsg" class="msg"></div>
+      </div>
+      <h3>📋 饲料列表</h3>
+      <table id="feedTable"><thead><tr><th>饲料编号</th><th>名称</th><th>库存数量</th><th>单位</th><th>操作</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div id="feeding" class="tab-content">
+      <div class="form-section">
+        <h3 class="form-title">🥣 新增投喂记录</h3>
+        <div class="form-grid">
+          <div><label>时间</label><input id="ftime" type="datetime-local"></div>
+          <div><label>动物</label><select id="fanimal"></select></div>
+          <div><label>饲料</label><select id="ffeed"></select></div>
+          <div><label>员工</label><select id="femployee"></select></div>
+          <div><label>数量</label><input id="fquantity" type="number" step="0.1" placeholder="如 2.5"></div>
+          <div><label>备注</label><input id="fnotes" placeholder="可选"></div>
+        </div>
+        <button class="btn" id="btnAddFeeding">➕ 添加记录</button>
+        <div id="feedingMsg" class="msg"></div>
+      </div>
+      <h3>📋 投喂记录</h3>
+      <table id="feedingTable"><thead><tr><th>记录ID</th><th>时间</th><th>动物</th><th>饲料</th><th>员工</th><th>数量</th><th>状态</th><th>操作</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <footer>🎓 数据库课程设计 tree-big-jeans 小组</footer>
+  </div>
+
+  <script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    function showMessage(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = 'msg ' + type;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
+
+    const API_BASE = (location.protocol === 'http:' || location.protocol === 'https:') ? '' : 'http://localhost:8080';
+    function getToken(){ try { return sessionStorage.getItem('zoo_token') || localStorage.getItem('zoo_token') || ''; } catch(e){ return ''; } }
+    function getUser(){ try { return { userId: sessionStorage.getItem('zoo_userId') || localStorage.getItem('zoo_userId') || '', role: sessionStorage.getItem('zoo_role') || localStorage.getItem('zoo_role') || '', username: sessionStorage.getItem('zoo_username') || localStorage.getItem('zoo_username') || '' }; } catch(e){ return {userId:'',role:'',username:''}; } }
+    function clearToken(){ try { ['zoo_token','zoo_userId','zoo_role','zoo_username'].forEach(k=>{ localStorage.removeItem(k); sessionStorage.removeItem(k); }); } catch(e){} }
+    function applyAuthUI(){ const t = getToken(); const st = document.getElementById('authStatus'); const lo = document.getElementById('btnLogout'); const li = document.getElementById('btnLogin'); const u = document.getElementById('loginUser'); const p = document.getElementById('loginPwd'); const info = getUser(); if(t){ st.textContent = `已登录：${info.username||info.userId}（${info.role||'未知角色'}）`; lo.style.display='inline-block'; li.style.display='none'; u.style.display='none'; p.style.display='none'; applyRoleUI(info.role); } else { st.textContent = '未登录'; lo.style.display='none'; li.style.display='inline-block'; u.style.display='inline-block'; p.style.display='inline-block'; } }
+    async function request(method, path, body){
+      const r = await fetch(API_BASE + path, {
+        method,
+        headers: (()=>{ const h = {}; if (body !== undefined) h['Content-Type']='application/json'; const t = getToken(); if(t) h['Authorization']='Bearer '+t; return h; })(),
+        body: body !== undefined ? JSON.stringify(body) : undefined
+      });
+      if (!r.ok) {
+        let payload = null;
+        try { payload = await r.json(); } catch(e) {}
+        const msg = (payload && (payload.message || payload.error)) || r.statusText || '请求失败';
+        const err = new Error(msg);
+        err.status = r.status;
+        err.payload = payload;
+        throw err;
+      }
+      const ct = r.headers.get('content-type') || '';
+      if (ct.includes('application/json')) return r.json();
+      if (r.status === 204) return null;
+      return r.text();
+    }
+    const api = {
+      get: (path) => request('GET', path),
+      post: (path, body) => request('POST', path, body),
+      put: (path, body) => request('PUT', path, body),
+      del: (path) => request('DELETE', path)
+    };
+
+    async function loadAll() {
+      try {
+        const [ens, animals, emps, feeds, feedings] = await Promise.all([
+          api.get('/api/enclosures'),
+          api.get('/api/animals'),
+          api.get('/api/employees'),
+          api.get('/api/feeds'),
+          api.get('/api/feedings')
+        ]);
+        renderEnclosures(ens);
+        renderAnimals(animals, ens);
+        renderEmployees(emps, ens);
+        renderFeeds(feeds);
+        renderFeeding(feedings);
+        populateSelect('#aenid', ens.map(e=>({value:e.enclosureId,text:`${e.name} (${e.enclosureId})`})));
+        populateSelect('#senid', ens.map(e=>({value:e.enclosureId,text:`${e.name} (${e.enclosureId})`})));
+        populateSelect('#fanimal', animals.map(a=>({value:a.animalId,text:`${a.name} (${a.animalId})`})));
+        populateSelect('#ffeed', feeds.map(f=>({value:f.feedId,text:`${f.name} (${f.feedId})`})));
+        populateSelect('#femployee', emps.map(s=>({value:s.employeeId,text:`${s.name} (${s.employeeId})`})));
+      } catch(err){ console.error(err); showMessage('enclosureMsg', '数据加载失败: '+(err.message||'无法连接后端'), 'error'); }
+    }
+
+    function populateSelect(sel, options){ const el = document.querySelector(sel); el.innerHTML = ''; options.forEach(o=>{ const opt=document.createElement('option'); opt.value=o.value; opt.textContent=o.text; el.appendChild(opt); }); }
+
+    function renderEnclosures(list){ const tbody = document.querySelector('#enclosureTable tbody'); tbody.innerHTML=''; list.forEach(e=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${e.enclosureId}</td><td>${e.name}</td><td>${e.capacity}</td><td>${e.currentAnimalCount||0}</td><td>${e.status||''}</td><td>${e.description||''}</td><td class="row-actions"><button class="btn" data-del="${e.enclosureId}">删除</button></td>`; tbody.appendChild(tr); }); tbody.querySelectorAll('button[data-del]').forEach(btn=>btn.addEventListener('click', async () => { try { await api.del('/api/enclosures/'+btn.dataset.del); loadAll(); } catch(err){ showMessage('enclosureMsg', '删除失败: '+(err.message||'错误'), 'error'); } })); }
+
+    function renderAnimals(list, ens){ const role = getUser().role; const tbody = document.querySelector('#animalTable tbody'); tbody.innerHTML=''; list.forEach(a=>{ const tr=document.createElement('tr'); const encSel = document.createElement('select'); ens.forEach(e=>{ const opt=document.createElement('option'); opt.value=e.enclosureId; opt.textContent=`${e.name} (${e.enclosureId})`; if(e.enclosureId===a.enclosureId) opt.selected=true; encSel.appendChild(opt); }); const tdOps = document.createElement('td'); tdOps.className='row-actions'; if(role !== 'staff'){ const transferBtn = document.createElement('button'); transferBtn.className='btn'; transferBtn.textContent='转移'; transferBtn.addEventListener('click', async ()=>{ try { await api.post(`/api/animals/${a.animalId}/transfer?targetEnclosureId=${encodeURIComponent(encSel.value)}`, {}); loadAll(); } catch(err){ showMessage('animalMsg', '转移失败: '+(err.message||'错误'), 'error'); } }); const delBtn = document.createElement('button'); delBtn.className='btn'; delBtn.textContent='删除'; delBtn.addEventListener('click', async ()=>{ try { await api.del('/api/animals/'+a.animalId); loadAll(); } catch(err){ showMessage('animalMsg', '删除失败: '+(err.message||'错误'), 'error'); } }); tdOps.appendChild(transferBtn); tdOps.appendChild(delBtn); }
+      tr.innerHTML = `<td>${a.animalId}</td><td>${a.name}</td><td>${a.species}</td><td>${a.gender}</td><td>${a.birthDate||''}</td><td></td>`; const tdEnc = tr.querySelectorAll('td')[5]; tdEnc.appendChild(encSel); tr.appendChild(tdOps); tbody.appendChild(tr); }); }
+
+    function renderEmployees(list, ens){ const role = getUser().role; const tbody = document.querySelector('#staffTable tbody'); tbody.innerHTML=''; list.forEach(s=>{ const tr=document.createElement('tr'); const encSel=document.createElement('select'); ens.forEach(e=>{ const opt=document.createElement('option'); opt.value=e.enclosureId; opt.textContent=`${e.name} (${e.enclosureId})`; if(e.enclosureId===s.enclosureId) opt.selected=true; encSel.appendChild(opt); }); const ops=document.createElement('td'); ops.className='row-actions'; if(role !== 'staff'){ const assignBtn=document.createElement('button'); assignBtn.className='btn'; assignBtn.textContent='分配展区'; assignBtn.addEventListener('click', async ()=>{ try { await api.post(`/api/employees/${s.employeeId}/assign-enclosure?enclosureId=${encodeURIComponent(encSel.value)}`, {}); loadAll(); } catch(err){ showMessage('staffMsg', '分配失败: '+(err.message||'错误'), 'error'); } }); const delBtn=document.createElement('button'); delBtn.className='btn'; delBtn.textContent='删除'; delBtn.addEventListener('click', async ()=>{ try { await api.del('/api/employees/'+s.employeeId); loadAll(); } catch(err){ showMessage('staffMsg', '删除失败: '+(err.message||'错误'), 'error'); } }); ops.appendChild(assignBtn); ops.appendChild(delBtn); }
+      tr.innerHTML = `<td>${s.employeeId}</td><td>${s.name}</td><td>${s.position}</td><td></td>`; tr.querySelectorAll('td')[3].appendChild(encSel); tr.appendChild(ops); tbody.appendChild(tr); }); }
+
+    function renderFeeds(list){ const role = getUser().role; const tbody = document.querySelector('#feedTable tbody'); tbody.innerHTML=''; list.forEach(f=>{ const tr=document.createElement('tr'); const ops=document.createElement('td'); ops.className='row-actions'; if(role !== 'staff'){ const incBtn=document.createElement('button'); incBtn.className='btn'; incBtn.textContent='+1'; incBtn.addEventListener('click', async ()=>{ try { await api.post(`/api/feeds/${f.feedId}/increase?qty=1`, {}); loadAll(); } catch(err){ showMessage('feedMsg','增加失败: '+(err.message||'错误'),'error'); } }); const decBtn=document.createElement('button'); decBtn.className='btn'; decBtn.textContent='-1'; decBtn.addEventListener('click', async ()=>{ try { await api.post(`/api/feeds/${f.feedId}/decrease?qty=1`, {}); loadAll(); } catch(err){ showMessage('feedMsg','减少失败: '+(err.message||'错误'),'error'); } }); const delBtn=document.createElement('button'); delBtn.className='btn'; delBtn.textContent='删除'; delBtn.addEventListener('click', async ()=>{ try { await api.del('/api/feeds/'+f.feedId); loadAll(); } catch(err){ showMessage('feedMsg','删除失败: '+(err.message||'错误'),'error'); } }); ops.appendChild(incBtn); ops.appendChild(decBtn); ops.appendChild(delBtn); }
+      tr.innerHTML = `<td>${f.feedId}</td><td>${f.name}</td><td>${(f.stockQuantity??0)}</td><td>${f.unit}</td>`; tr.appendChild(ops); tbody.appendChild(tr); }); }
+
+    function renderFeeding(list){ const role = getUser().role; const user = getUser(); const tbody=document.querySelector('#feedingTable tbody'); tbody.innerHTML=''; list.forEach(r=>{ const tr=document.createElement('tr'); const ops=document.createElement('td'); ops.className='row-actions'; if(role !== 'staff'){ const approveBtn=document.createElement('button'); approveBtn.className='btn'; approveBtn.textContent='通过'; approveBtn.addEventListener('click', async ()=>{ try { await api.post(`/api/feedings/${r.recordId}/approve?verifierId=${encodeURIComponent(user.userId)}`, {}); loadAll(); } catch(err){ showMessage('feedingMsg','审批失败: '+(err.message||'错误'),'error'); } }); const rejectBtn=document.createElement('button'); rejectBtn.className='btn'; rejectBtn.textContent='拒绝'; rejectBtn.addEventListener('click', async ()=>{ try { await api.post(`/api/feedings/${r.recordId}/reject?verifierId=${encodeURIComponent(user.userId)}`, {}); loadAll(); } catch(err){ showMessage('feedingMsg','驳回失败: '+(err.message||'错误'),'error'); } }); ops.appendChild(approveBtn); ops.appendChild(rejectBtn); }
+      tr.innerHTML = `<td>${r.recordId||''}</td><td>${r.feedingTime? r.feedingTime.replace('T',' ').replace('Z',''): ''}</td><td>${r.animalId}</td><td>${r.feedId}</td><td>${r.employeeId}</td><td>${r.quantity}</td><td>${r.status||''}</td>`; tr.appendChild(ops); tbody.appendChild(tr); }); }
+
+    document.getElementById('btnAddEnclosure').addEventListener('click', async () => {
+      const enid = document.getElementById('enid').value.trim();
+      const ename = document.getElementById('ename').value.trim();
+      const ecapacity = parseInt(document.getElementById('ecapacity').value,10);
+      const estatus = document.getElementById('estatus').value;
+      const edesc = document.getElementById('edesc').value.trim();
+      if(!enid || !ename || !ecapacity){ return showMessage('enclosureMsg','⚠️ 展区编号、名称、容量不能为空','error'); }
+      try {
+        await api.post('/api/enclosures', { enclosureId: enid, name: ename, capacity: ecapacity, currentAnimalCount: 0, status: estatus, description: edesc });
+        showMessage('enclosureMsg','✅ 展区添加成功！','success');
+        document.getElementById('enid').value=''; document.getElementById('ename').value=''; document.getElementById('ecapacity').value=''; document.getElementById('edesc').value='';
+        loadAll();
+      } catch(err){ showMessage('enclosureMsg','添加失败: '+(err.message||'错误'),'error'); }
+    });
+
+    document.getElementById('btnAddAnimal').addEventListener('click', async () => {
+      const anid = document.getElementById('anid').value.trim();
+      const aname = document.getElementById('aname').value.trim();
+      const aspecies = document.getElementById('aspecies').value.trim();
+      const agender = document.getElementById('agender').value;
+      const abirth = document.getElementById('abirth').value;
+      const aenid = document.getElementById('aenid').value;
+      if(!anid || !aname || !aspecies || !aenid){ return showMessage('animalMsg','⚠️ 动物编号、名字、种类、展区必填','error'); }
+      try {
+        await api.post('/api/animals', { animalId: anid, name: aname, species: aspecies, gender: agender, birthDate: abirth || null, enclosureId: aenid });
+        showMessage('animalMsg','✅ 动物添加成功！','success');
+        document.getElementById('anid').value=''; document.getElementById('aname').value=''; document.getElementById('aspecies').value=''; document.getElementById('abirth').value='';
+        loadAll();
+      } catch(err){ showMessage('animalMsg','添加失败: '+(err.message||'错误'),'error'); }
+    });
+
+    document.getElementById('btnAddStaff').addEventListener('click', async () => {
+      const sid = document.getElementById('sid').value.trim();
+      const sname = document.getElementById('sname').value.trim();
+      const srole = document.getElementById('srole').value;
+      const senid = document.getElementById('senid').value || null;
+      const shire = document.getElementById('shire').value || null;
+      const sphone = document.getElementById('sphone').value.trim();
+      const semail = document.getElementById('semail').value.trim();
+      if(!sid || !sname || !srole){ return showMessage('staffMsg','⚠️ 员工编号、姓名、职位必填','error'); }
+      try {
+        await api.post('/api/employees', { employeeId: sid, name: sname, position: srole, enclosureId: senid, hireDate: shire, phone: sphone||null, email: semail||null });
+        showMessage('staffMsg','✅ 员工添加成功！','success');
+        document.getElementById('sid').value=''; document.getElementById('sname').value=''; document.getElementById('sphone').value=''; document.getElementById('semail').value='';
+        loadAll();
+      } catch(err){ showMessage('staffMsg','添加失败: '+(err.message||'错误'),'error'); }
+    });
+
+    document.getElementById('btnAddFeed').addEventListener('click', async () => {
+      const fid = document.getElementById('fid').value.trim();
+      const fname = document.getElementById('fname').value.trim();
+      const fcat = document.getElementById('fcat').value.trim();
+      const fstock = document.getElementById('fstock').value;
+      const funit = document.getElementById('funit').value;
+      if(!fid || !fname || fstock === ''){ return showMessage('feedMsg','⚠️ 饲料编号、名称、库存必填','error'); }
+      try {
+        await api.post('/api/feeds', { feedId: fid, name: fname, category: fcat||null, stockQuantity: parseFloat(fstock), unit: funit });
+        showMessage('feedMsg','✅ 饲料添加成功！','success');
+        document.getElementById('fid').value=''; document.getElementById('fname').value=''; document.getElementById('fcat').value=''; document.getElementById('fstock').value='';
+        loadAll();
+      } catch(err){ showMessage('feedMsg','添加失败: '+(err.message||'错误'),'error'); }
+    });
+
+    document.getElementById('btnAddFeeding').addEventListener('click', async () => {
+      const ftime = document.getElementById('ftime').value;
+      const fanimal = document.getElementById('fanimal').value;
+      const ffeed = document.getElementById('ffeed').value;
+      const femployee = document.getElementById('femployee').value;
+      const fquantity = document.getElementById('fquantity').value;
+      const fnotes = document.getElementById('fnotes').value.trim();
+      if(!fanimal || !ffeed || !femployee || fquantity === ''){ return showMessage('feedingMsg','⚠️ 所有字段必填','error'); }
+      try {
+        await api.post('/api/feedings', { animalId: fanimal, feedId: ffeed, employeeId: femployee, quantity: parseFloat(fquantity), notes: fnotes||null });
+        showMessage('feedingMsg','✅ 投喂记录添加成功！','success');
+        document.getElementById('fquantity').value=''; document.getElementById('fnotes').value='';
+        loadAll();
+      } catch(err){ showMessage('feedingMsg','添加失败: '+(err.message||'错误'),'error'); }
+    });
+
+    document.getElementById('btnLogin').addEventListener('click', ()=>{ location.href = '/login.html'; });
+    document.getElementById('btnLogout').addEventListener('click', ()=>{ clearToken(); applyAuthUI(); });
+
+    window.onload = () => {
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+      document.getElementById('ftime').value = local;
+      const t = getToken();
+      if(!t){ location.href = '/login.html'; return; }
+      applyAuthUI();
+      loadAll();
+    };
+
+    function applyRoleUI(role){
+      const tabs = {
+        enclosure: document.querySelector('button[data-tab="enclosure"]'),
+        animal: document.querySelector('button[data-tab="animal"]'),
+        staff: document.querySelector('button[data-tab="staff"]'),
+        feed: document.querySelector('button[data-tab="feed"]'),
+        feeding: document.querySelector('button[data-tab="feeding"]')
+      };
+      const isSuper = role === 'super_admin';
+      const isAdmin = role === 'admin';
+      const isStaff = role === 'staff';
+      if(isStaff){
+        tabs.enclosure.style.display = 'none';
+        tabs.staff.style.display = 'none';
+        tabs.feed.style.display = 'inline-block';
+        tabs.animal.style.display = 'inline-block';
+        tabs.feeding.style.display = 'inline-block';
+      } else if(isAdmin){
+        tabs.enclosure.style.display = 'inline-block';
+        tabs.staff.style.display = 'inline-block';
+        tabs.feed.style.display = 'inline-block';
+        tabs.animal.style.display = 'inline-block';
+        tabs.feeding.style.display = 'inline-block';
+      } else if(isSuper){
+        tabs.enclosure.style.display = 'inline-block';
+        tabs.staff.style.display = 'inline-block';
+        tabs.feed.style.display = 'inline-block';
+        tabs.animal.style.display = 'inline-block';
+        tabs.feeding.style.display = 'inline-block';
+      }
+    }
+  </script>
+</body>
+</html>

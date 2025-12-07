@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>动物园管理系统</title>
+  <style>
+    :root {
+      --primary: #4CAF50;
+      --light: #E8F5E9;
+      --border: #ddd;
+    }
+    body {
+      font-family: "Microsoft YaHei", sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f9fdf9;
+      color: #333;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: var(--primary);
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    h1 { margin: 0; }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    .tab-btn:hover, .tab-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* 表格通用样式 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background-color: var(--light);
+      font-weight: bold;
+      position: sticky;
+      top: 0;
+    }
+    tr:hover { background-color: #f9f9f9; }
+
+    /* 表单样式 */
+    .form-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .form-title {
+      margin-top: 0;
+      color: var(--primary);
+      border-left: 4px solid var(--primary);
+      padding-left: 10px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    .btn:hover { background: #388E3C; }
+    .msg { 
+      padding: 10px; 
+      margin: 10px 0; 
+      border-radius: 4px; 
+      display: none; 
+    }
+    .msg.success { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+    .msg.error { background: #FFEBEE; color: #C62828; border: 1px solid #EF9A9A; }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #777;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🐘 动物园信息管理系统</h1>
+    </header>
+
+    <!-- 标签页导航 -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="enclosure">展区信息</button>
+      <button class="tab-btn" data-tab="animal">动物信息</button>
+      <button class="tab-btn" data-tab="staff">员工信息</button>
+      <button class="tab-btn" data-tab="feed">饲料信息</button>
+      <button class="tab-btn" data-tab="feeding">投喂记录</button>
+    </div>
+
+    <!-- 展区信息 -->
+    <div id="enclosure" class="tab-content active">
+      <div class="form-section">
+        <h3 class="form-title">🟢 新增展区</h3>
+        <div class="form-grid">
+          <div><label>展区编号</label><input id="enid" placeholder="如 E001"></div>
+          <div><label>名称</label><input id="ename" placeholder="如 猴山"></div>
+          <div><label>容量</label><input id="ecapacity" type="number" placeholder="如 20"></div>
+          <div><label>状态</label>
+            <select id="estatus">
+              <option value="开放">开放</option>
+              <option value="维修中">维修中</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" onclick="addEnclosure()">➕ 添加展区</button>
+        <div id="enclosureMsg" class="msg"></div>
+      </div>
+
+      <h3>📋 展区列表</h3>
+      <table id="enclosureTable">
+        <thead>
+          <tr><th>展区编号</th><th>名称</th><th>容量</th><th>状态</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>E001</td><td>猴山</td><td>20</td><td>开放</td></tr>
+          <tr><td>E002</td><td>猛兽区</td><td>10</td><td>开放</td></tr>
+          <tr><td>E003</td><td>水族馆</td><td>15</td><td>维修中</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 动物信息 -->
+    <div id="animal" class="tab-content">
+      <div class="form-section">
+        <h3 class="form-title">🐒 新增动物</h3>
+        <div class="form-grid">
+          <div><label>动物编号</label><input id="anid" placeholder="如 A001"></div>
+          <div><label>名字</label><input id="aname" placeholder="如 乐乐"></div>
+          <div><label>种类</label><input id="aspecies" placeholder="如 金丝猴"></div>
+          <div><label>性别</label>
+            <select id="agender">
+              <option value="♂">♂ 雄性</option>
+              <option value="♀">♀ 雌性</option>
+            </select>
+          </div>
+          <div><label>出生日期</label><input id="abirth" type="date"></div>
+          <div><label>所在展区</label>
+            <select id="aenid">
+              <option value="E001">猴山 (E001)</option>
+              <option value="E002">猛兽区 (E002)</option>
+              <option value="E003">水族馆 (E003)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" onclick="addAnimal()">➕ 添加动物</button>
+        <div id="animalMsg" class="msg"></div>
+      </div>
+
+      <h3>📋 动物列表</h3>
+      <table id="animalTable">
+        <thead>
+          <tr><th>动物编号</th><th>名字</th><th>种类</th><th>性别</th><th>出生日期</th><th>所在展区</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>A001</td><td>乐乐</td><td>金丝猴</td><td>♂</td><td>2020-05-12</td><td>E001</td></tr>
+          <tr><td>A002</td><td>奇奇</td><td>猕猴</td><td>♀</td><td>2021-03-08</td><td>E001</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 员工信息 -->
+    <div id="staff" class="tab-content">
+      <div class="form-section">
+        <h3 class="form-title">👷 新增员工</h3>
+        <div class="form-grid">
+          <div><label>员工编号</label><input id="sid" placeholder="如 S001"></div>
+          <div><label>姓名</label><input id="sname" placeholder="如 张伟"></div>
+          <div><label>职位</label>
+            <select id="srole">
+              <option value="饲养员">饲养员</option>
+              <option value="兽医">兽医</option>
+              <option value="管理员">管理员</option>
+              <option value="讲解员">讲解员</option>
+            </select>
+          </div>
+          <div><label>负责展区</label>
+            <select id="senid">
+              <option value="E001">猴山 (E001)</option>
+              <option value="E002">猛兽区 (E002)</option>
+              <option value="E003">水族馆 (E003)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" onclick="addStaff()">➕ 添加员工</button>
+        <div id="staffMsg" class="msg"></div>
+      </div>
+
+      <h3>📋 员工列表</h3>
+      <table id="staffTable">
+        <thead>
+          <tr><th>员工编号</th><th>姓名</th><th>职位</th><th>负责展区</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>S001</td><td>张伟</td><td>饲养员</td><td>E001</td></tr>
+          <tr><td>S002</td><td>李娜</td><td>兽医</td><td>E002</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 饲料信息 -->
+    <div id="feed" class="tab-content">
+      <div class="form-section">
+        <h3 class="form-title">🥜 新增饲料</h3>
+        <div class="form-grid">
+          <div><label>饲料编号</label><input id="fid" placeholder="如 F001"></div>
+          <div><label>名称</label><input id="fname" placeholder="如 香蕉"></div>
+          <div><label>库存数量</label><input id="fstock" type="number" placeholder="如 100"></div>
+          <div><label>单位</label>
+            <select id="funit">
+              <option value="kg">kg</option>
+              <option value="包">包</option>
+              <option value="根">根</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" onclick="addFeed()">➕ 添加饲料</button>
+        <div id="feedMsg" class="msg"></div>
+      </div>
+
+      <h3>📋 饲料列表</h3>
+      <table id="feedTable">
+        <thead>
+          <tr><th>饲料编号</th><th>名称</th><th>库存数量</th><th>单位</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>F001</td><td>香蕉</td><td>150</td><td>kg</td></tr>
+          <tr><td>F002</td><td>牛肉</td><td>80</td><td>kg</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 投喂记录 -->
+    <div id="feeding" class="tab-content">
+      <div class="form-section">
+        <h3 class="form-title">🥣 新增投喂记录</h3>
+        <div class="form-grid">
+          <div><label>时间</label><input id="ftime" type="datetime-local"></div>
+          <div><label>动物</label>
+            <select id="fanimal">
+              <option value="A001">乐乐 (A001)</option>
+              <option value="A002">奇奇 (A002)</option>
+            </select>
+          </div>
+          <div><label>饲料</label>
+            <select id="ffeed">
+              <option value="F001">香蕉 (F001)</option>
+              <option value="F002">牛肉 (F002)</option>
+            </select>
+          </div>
+          <div><label>员工</label>
+            <select id="femployee">
+              <option value="S001">张伟 (S001)</option>
+              <option value="S002">李娜 (S002)</option>
+            </select>
+          </div>
+          <div><label>数量</label><input id="fquantity" type="number" step="0.1" placeholder="如 2.5"></div>
+        </div>
+        <button class="btn" onclick="addFeeding()">➕ 添加记录</button>
+        <div id="feedingMsg" class="msg"></div>
+      </div>
+
+      <h3>📋 投喂记录</h3>
+      <table id="feedingTable">
+        <thead>
+          <tr><th>时间</th><th>动物</th><th>饲料</th><th>员工</th><th>数量</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>2025-04-05 09:30</td><td>A001</td><td>F001</td><td>S001</td><td>2.0</td></tr>
+          <tr><td>2025-04-05 10:15</td><td>A002</td><td>F001</td><td>S001</td><td>1.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>
+      🎓 数据库课程设计 tree-big-jeans 小组
+    </footer>
+  </div>
+
+  <script>
+    // 标签页切换
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // 工具：显示消息
+    function showMessage(id, text, type) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = 'msg ' + type;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
+
+    // 新增展区
+    function addEnclosure() {
+      const enid = document.getElementById('enid').value.trim();
+      const ename = document.getElementById('ename').value.trim();
+      const ecapacity = document.getElementById('ecapacity').value;
+      const estatus = document.getElementById('estatus').value;
+      
+      if (!enid || !ename || !ecapacity) {
+        showMessage('enclosureMsg', '⚠️ 展区编号、名称、容量不能为空', 'error');
+        return;
+      }
+      
+      const row = `<tr><td>${enid}</td><td>${ename}</td><td>${ecapacity}</td><td>${estatus}</td></tr>`;
+      document.querySelector('#enclosureTable tbody').insertAdjacentHTML('beforeend', row);
+      showMessage('enclosureMsg', '✅ 展区添加成功！', 'success');
+      
+      // 清空 & 更新下拉选项
+      document.getElementById('enid').value = '';
+      document.getElementById('ename').value = '';
+      document.getElementById('ecapacity').value = '';
+      updateDropdowns(enid, ename, 'en');
+    }
+
+    // 新增动物
+    function addAnimal() {
+      const anid = document.getElementById('anid').value.trim();
+      const aname = document.getElementById('aname').value.trim();
+      const aspecies = document.getElementById('aspecies').value.trim();
+      const agender = document.getElementById('agender').value;
+      const abirth = document.getElementById('abirth').value;
+      const aenid = document.getElementById('aenid').value;
+      
+      if (!anid || !aname || !aspecies || !abirth) {
+        showMessage('animalMsg', '⚠️ 动物编号、名字、种类、出生日期必填', 'error');
+        return;
+      }
+      
+      const row = `<tr><td>${anid}</td><td>${aname}</td><td>${aspecies}</td><td>${agender}</td><td>${abirth}</td><td>${aenid}</td></tr>`;
+      document.querySelector('#animalTable tbody').insertAdjacentHTML('beforeend', row);
+      showMessage('animalMsg', '✅ 动物添加成功！', 'success');
+      
+      // 清空 & 更新动物下拉（用于投喂）
+      document.getElementById('anid').value = '';
+      document.getElementById('aname').value = '';
+      updateDropdowns(anid, aname, 'animal');
+    }
+
+    // 新增员工
+    function addStaff() {
+      const sid = document.getElementById('sid').value.trim();
+      const sname = document.getElementById('sname').value.trim();
+      const srole = document.getElementById('srole').value;
+      const senid = document.getElementById('senid').value;
+      
+      if (!sid || !sname) {
+        showMessage('staffMsg', '⚠️ 员工编号、姓名必填', 'error');
+        return;
+      }
+      
+      const row = `<tr><td>${sid}</td><td>${sname}</td><td>${srole}</td><td>${senid}</td></tr>`;
+      document.querySelector('#staffTable tbody').insertAdjacentHTML('beforeend', row);
+      showMessage('staffMsg', '✅ 员工添加成功！', 'success');
+      
+      // 清空 & 更新员工下拉
+      document.getElementById('sid').value = '';
+      document.getElementById('sname').value = '';
+      updateDropdowns(sid, sname, 'staff');
+    }
+
+    // 新增饲料
+    function addFeed() {
+      const fid = document.getElementById('fid').value.trim();
+      const fname = document.getElementById('fname').value.trim();
+      const fstock = document.getElementById('fstock').value;
+      const funit = document.getElementById('funit').value;
+      
+      if (!fid || !fname || fstock === '') {
+        showMessage('feedMsg', '⚠️ 饲料编号、名称、库存必填', 'error');
+        return;
+      }
+      
+      const row = `<tr><td>${fid}</td><td>${fname}</td><td>${fstock}</td><td>${funit}</td></tr>`;
+      document.querySelector('#feedTable tbody').insertAdjacentHTML('beforeend', row);
+      showMessage('feedMsg', '✅ 饲料添加成功！', 'success');
+      
+      // 清空 & 更新饲料下拉
+      document.getElementById('fid').value = '';
+      document.getElementById('fname').value = '';
+      updateDropdowns(fid, fname, 'feed');
+    }
+
+    // 新增投喂记录
+    function addFeeding() {
+      const ftime = document.getElementById('ftime').value;
+      const fanimal = document.getElementById('fanimal').value;
+      const ffeed = document.getElementById('ffeed').value;
+      const femployee = document.getElementById('femployee').value;
+      const fquantity = document.getElementById('fquantity').value;
+      
+      if (!ftime || !fanimal || !ffeed || !femployee || fquantity === '') {
+        showMessage('feedingMsg', '⚠️ 所有字段必填', 'error');
+        return;
+      }
+      
+      const row = `<tr><td>${ftime.replace('T', ' ')}</td><td>${fanimal}</td><td>${ffeed}</td><td>${femployee}</td><td>${fquantity}</td></tr>`;
+      document.querySelector('#feedingTable tbody').insertAdjacentHTML('beforeend', row);
+      showMessage('feedingMsg', '✅ 投喂记录添加成功！', 'success');
+      
+      // 清空
+      document.getElementById('ftime').value = '';
+      document.getElementById('fquantity').value = '';
+    }
+
+    // 动态更新下拉框（动物/员工/饲料/展区）
+    function updateDropdowns(id, name, type) {
+      const selects = {
+        animal: ['#fanimal'],
+        staff: ['#femployee'],
+        feed: ['#ffeed'],
+        en: ['#aenid', '#senid']
+      };
+      
+      selects[type]?.forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el && ['animal','staff','feed','en'].includes(type)) {
+          const opt = document.createElement('option');
+          opt.value = id;
+          if (type === 'en') {
+            opt.textContent = `${name} (${id})`;
+          } else {
+            opt.textContent = `${name} (${id})`;
+          }
+          el.appendChild(opt);
+        }
+      });
+    }
+
+    // 初始化：当前时间默认为今天
+    window.onload = () => {
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        .toISOString().slice(0, 16);
+      document.getElementById('ftime').value = local;
+    };
+  </script>
+</body>
+</html>

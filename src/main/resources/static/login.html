@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>用户登录 - 动物园管理系统</title>
+  <style>
+    :root { --primary:#4CAF50; --light:#E8F5E9; --border:#ddd; }
+    body { font-family:"Microsoft YaHei",sans-serif; margin:0; padding:0; background:#f9fdf9; color:#333; }
+    .wrap { display:flex; min-height:100vh; align-items:center; justify-content:center; }
+    .card { width:420px; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.08); padding:24px; }
+    .title { margin:0 0 16px; text-align:center; color:#2E7D32; }
+    .subtitle { text-align:center; margin:0 0 20px; color:#555; }
+    .form-grid { display:grid; grid-template-columns:1fr; gap:12px; }
+    label { font-weight:bold; margin-bottom:6px; display:block; }
+    input { width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; box-sizing:border-box; }
+    .row { display:flex; gap:10px; align-items:center; }
+    .captcha-box { display:flex; align-items:center; gap:10px; }
+    .captcha { font-weight:bold; background:var(--light); border:1px solid #A5D6A7; padding:8px 12px; border-radius:6px; letter-spacing:2px; }
+    .btn { background:var(--primary); color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-size:14px; }
+    .btn:hover { background:#388E3C; }
+    .msg { padding:10px; border-radius:6px; display:none; margin-top:8px; }
+    .msg.error { background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A; }
+    .msg.success { background:#E8F5E9; color:#2E7D32; border:1px solid #A5D6A7; }
+    .footer { text-align:center; margin-top:12px; color:#777; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h2 class="title">🐘 动物园管理系统</h2>
+      <div class="subtitle">用户登录</div>
+      <div class="form-grid">
+        <div>
+          <label>用户名</label>
+          <input id="u" placeholder="如 admin">
+        </div>
+        <div>
+          <label>密码</label>
+          <input id="p" type="password" placeholder="如 admin123">
+        </div>
+        <div>
+          <label>验证码</label>
+          <div class="captcha-box">
+            <input id="c" placeholder="请输入验证码">
+            <span id="cv" class="captcha">1234</span>
+            <button class="btn" id="refresh">刷新</button>
+          </div>
+        </div>
+        <div class="row">
+          <label style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="remember"> 记住我
+          </label>
+        </div>
+        <div class="row" style="justify-content:center;">
+          <button class="btn" id="login">登录</button>
+        </div>
+        <div id="msg" class="msg"></div>
+      </div>
+      <div class="footer">🎓 数据库课程设计 tree-big-jeans 小组</div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = (location.protocol === 'http:' || location.protocol === 'https:') ? '' : 'http://localhost:8080';
+    function showMessage(text, type){ const el = document.getElementById('msg'); el.textContent = text; el.className = 'msg ' + type; el.style.display = 'block'; setTimeout(()=>{ el.style.display = 'none'; }, 3000); }
+    function genCaptcha(){ const v = Math.floor(1000 + Math.random()*9000).toString(); document.getElementById('cv').textContent = v; }
+    function setToken(token, userId, role, username, persist){ try { const store = persist ? localStorage : sessionStorage; store.setItem('zoo_token', token||''); store.setItem('zoo_userId', userId||''); store.setItem('zoo_role', role||''); store.setItem('zoo_username', username||''); } catch(e){} }
+    function clearToken(){ try { localStorage.removeItem('zoo_token'); localStorage.removeItem('zoo_userId'); localStorage.removeItem('zoo_role'); localStorage.removeItem('zoo_username'); sessionStorage.removeItem('zoo_token'); sessionStorage.removeItem('zoo_userId'); sessionStorage.removeItem('zoo_role'); sessionStorage.removeItem('zoo_username'); } catch(e){} }
+    async function request(method, path){ const r = await fetch(API_BASE + path, { method }); if(!r.ok){ const payload = await r.json().catch(()=>({message:r.statusText})); throw new Error(payload.message||'请求失败'); } return r.json(); }
+
+    document.getElementById('refresh').addEventListener('click', genCaptcha);
+    document.getElementById('login').addEventListener('click', async ()=>{
+      const u = document.getElementById('u').value.trim();
+      const p = document.getElementById('p').value;
+      const c = document.getElementById('c').value.trim();
+      const cv = document.getElementById('cv').textContent.trim();
+      const remember = document.getElementById('remember').checked;
+      if(!u || !p){ return showMessage('请输入用户名与密码','error'); }
+      if(!c){ return showMessage('请输入验证码','error'); }
+      if(c !== cv){ genCaptcha(); return showMessage('验证码错误','error'); }
+      try {
+        const res = await request('POST', `/api/users/auth?username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`);
+        const token = res.token; const userId = res.userId; const role = res.role || '';
+        if(!token){ return showMessage('登录失败：未返回令牌','error'); }
+        setToken(token, userId, role, u, remember);
+        showMessage('登录成功','success');
+        setTimeout(()=>{ location.href = '/'; }, 500);
+      } catch(err){ showMessage(err.message || '登录失败','error'); }
+    });
+    window.onload = () => { clearToken(); genCaptcha(); };
+  </script>
+</body>
+</html>
+
